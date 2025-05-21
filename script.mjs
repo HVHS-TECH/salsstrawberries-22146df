@@ -37,11 +37,16 @@ const FB_GAMEAPP = initializeApp(firebaseConfig);
 const analytics = getAnalytics(FB_GAMEAPP);
 const FB_GAMEDB = getDatabase(FB_GAMEAPP);
 /************************************************************8 */
+var currentUser = null;
+var userId = null;
+var userEmail = "";
 
 export {
   fb_initialise,
   fb_login,
   fb_WriteRec,
+  fb_ReadRec,
+  writeEmail,
 };
 
 
@@ -71,10 +76,11 @@ function fb_login() {
   });
   signInWithPopup(AUTH, PROVIDER)
     .then((result) => {
-      const user = result.user;
-      if (user) {
-        console.log("User Signed In", user);
-        document.getElementById('fbUsername').innerText = user.displayName || "Unknown User";
+      currentUser = result.user;
+      userId = currentUser.uid;
+      if (currentUser) {
+        console.log("User Signed In", currentUser);
+        document.getElementById('fbUsername').innerText = currentUser.displayName || "Unknown User";
       } else {
         console.warn("No user returned after sign-in.");
         document.getElementById('fbUsername').innerText = "Login worked with no data available";
@@ -99,23 +105,22 @@ function fb_WriteRec() {
   const FAVOURITEFRUIT = document.getElementById("favoriteFruit").value.trim();
   const FRUITQUANTITY = document.getElementById("fruitQuantity").value.trim();
 
+
   if (!NAME || !FAVOURITEFRUIT || !FRUITQUANTITY) {
     alert("Please fill out all fields.");
     return;
   }
-  
-  
-  
-  const recordPath = "Users";
+
+
+
+  const recordPath = "users/" + userId;
   const data = {
-        name: NAME,
-        favouritefruit: FAVOURITEFRUIT,
-        fruitamount: FRUITQUANTITY
+    name: NAME,
+    favouritefruit: FAVOURITEFRUIT,
+    fruitamount: FRUITQUANTITY
   };
+
   const DATAREF = ref(FB_GAMEDB, recordPath); // Create the reference
-
-
-
   set(DATAREF, data)
     .then(() => {
       console.log("Data Successfully written");
@@ -130,6 +135,51 @@ function fb_WriteRec() {
 
 }
 
+
+
+/******************************************************/
+// fb_ReadRec
+// Called by index.html on page load
+// read a record on the realtime database
+// Input: n/a
+// Return: User Info
+/******************************************************/
+function fb_ReadRec() {
+  const recordPath = "users/" + userId;
+  const DATAREF = ref(FB_GAMEDB, recordPath); // Create the reference
+
+  return get(DATAREF).then((snapshot) => {
+    var userData = snapshot.val();
+    if (userData != null) {
+      console.log(userData)
+      return (userData)
+    } else {
+      console.log("No data at " + recordPath)
+    }
+  }).catch((error) => {
+    throw error
+  });
+}
+
+function writeEmail() {
+  if (!currentUser) {
+    alert("You must be logged in!");
+  } else {
+    fb_ReadRec().then((userData) => {
+      userEmail = `
+        <div style="background: #fff0f5; border: 1px solid #ccc; padding: 1rem; border-radius: 8px;">
+          <p>Hey, ${userData.name},</p>
+          <p>Thank you for taking part in our survey, here at Sal's Strawberry Saloon.</p>
+          <p>Based on your answers, we will be sending you personalized packages including your favourite ${userData.favouritefruit}/s we heard you love!</p>
+          <p>At the moment, we want to offer you a deal to get fresh ${userData.favouritefruit}/s ${userData.fruitamount}x a week!!</p>
+          <p><em>The Sal’s Strawberry Saloon Team</em></p>
+        </div>`;
+      document.getElementById("theEmail").innerHTML = userEmail;
+    }).catch((error) => {
+      console.warn(error);
+    });
+  }
+}
 
 
 
