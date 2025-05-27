@@ -15,11 +15,12 @@ console.log('%c main.mjs',
 // Import all the constants & functions required from fb_io module
 
 
-import { fb_initialise, fb_login, fb_WriteRec, fb_ReadRec, writeEmail}
+import { fb_initialise, fb_login, fb_WriteRec, fb_ReadRec, writeEmail,TopFruitList}
     from './script.mjs'; 
     window.fb_initialise   = fb_initialise;
     window.fb_login = fb_login;
     window.fb_WriteRec = fb_WriteRec;
     window.fb_ReadRec = fb_ReadRec;
     window.writeEmail = writeEmail;
+    window.TopFruitList = TopFruitList;
     

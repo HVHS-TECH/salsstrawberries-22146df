@@ -13,7 +13,7 @@ import { signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.
 import { ref, set } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
 import { get } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
 import { update } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
-import { query, orderByChild, limitToFirst } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+import { query, orderByChild, limitToFirst, onValue } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
 
 
 
@@ -47,6 +47,7 @@ export {
   fb_WriteRec,
   fb_ReadRec,
   writeEmail,
+  TopFruitList,
 };
 
 
@@ -69,6 +70,7 @@ function fb_initialise() {
 // Return: n/a
 /******************************************************/
 function fb_login() {
+  TopFruitList();
   const AUTH = getAuth();
   const PROVIDER = new GoogleAuthProvider();
   PROVIDER.setCustomParameters({
@@ -133,6 +135,8 @@ function fb_WriteRec() {
 
     });
 
+
+    TopFruitList();
 }
 
 
@@ -161,6 +165,16 @@ function fb_ReadRec() {
   });
 }
 
+
+
+
+/******************************************************/
+// writeEmail
+// Called by index.html on page load
+// Write email customised to user
+// Input: n/a
+// Return: User Info
+/******************************************************/
 function writeEmail() {
   if (!currentUser) {
     alert("You must be logged in!");
@@ -178,8 +192,63 @@ function writeEmail() {
     }).catch((error) => {
       console.warn(error);
     });
-  }
+  } 
 }
 
 
 
+/******************************************************/
+// TopFruitList
+// Called by index.html on page load
+// Display the top fruits being requested
+// Input: n/a
+// Return: User Info
+/******************************************************/
+
+function TopFruitList() {
+  console.log("TopFruitList() called");  // Check that function is triggered
+
+  const USERS_REF = ref(FB_GAMEDB, "users/");
+console.log("Attempting to access:", USERS_REF);
+
+  onValue(USERS_REF, (snapshot) => {
+  console.log("Snapshot received:", snapshot.val());
+
+    const fruitCount = {};
+
+    snapshot.forEach(child => {
+      const userData = child.val();
+      console.log("User data from DB:", userData);  // Log each user record
+
+      const fruit = userData.favouritefruit;
+      if (fruit) {
+        fruitCount[fruit] = (fruitCount[fruit] || 0) + 1;
+      }
+    });
+
+    console.log("Fruit count object:", fruitCount);  // Check counting worked
+
+    const topFruits = Object.entries(fruitCount)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+
+    console.log("Top fruits array:", topFruits);  // What are top fruits now?
+
+    const list = document.getElementById("fruitsList");
+    if (!list) {
+      console.error("No element with id 'fruitsList' found!");
+      return;
+    }
+    list.innerHTML = ""; 
+
+    topFruits.forEach(([fruit, count]) => {
+      console.log(`Adding list item: ${fruit} (${count})`); // What is being added?
+
+      const li = document.createElement("li");
+      li.textContent = `${fruit} (${count})`;
+      list.appendChild(li);
+    });
+
+    console.log("Fruit list updated in DOM.");
+  });
+}
