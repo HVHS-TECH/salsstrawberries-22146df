@@ -104,7 +104,8 @@ function fb_login() {
 /******************************************************/
 function fb_WriteRec() {
   const NAME = document.getElementById("name").value.trim();
-  const FAVOURITEFRUIT = document.getElementById("favoriteFruit").value.trim();
+  let FAVOURITEFRUIT = document.getElementById("favoriteFruit").value.trim();
+  FAVOURITEFRUIT = FAVOURITEFRUIT.toLowerCase().replace(/\s+/g, "");
   const FRUITQUANTITY = document.getElementById("fruitQuantity").value.trim();
 
 
@@ -226,13 +227,13 @@ console.log("Attempting to access:", USERS_REF);
       }
     });
 
-    console.log("Fruit count object:", fruitCount);  // Check counting worked
+    console.log("Fruit count object:", fruitCount);
 
     const topFruits = Object.entries(fruitCount)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5);
 
-    console.log("Top fruits array:", topFruits);  // What are top fruits now?
+    console.log("Top fruits array:", topFruits);  
 
     const list = document.getElementById("fruitsList");
     if (!list) {
@@ -242,7 +243,7 @@ console.log("Attempting to access:", USERS_REF);
     list.innerHTML = ""; 
 
     topFruits.forEach(([fruit, count]) => {
-      console.log(`Adding list item: ${fruit} (${count})`); // What is being added?
+      console.log(`Adding list item: ${fruit} (${count})`); 
 
       const li = document.createElement("li");
       li.textContent = `${fruit} (${count})`;
